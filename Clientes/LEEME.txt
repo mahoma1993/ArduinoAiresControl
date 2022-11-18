@@ -1,0 +1,8 @@
+ANTES DE IMPORTAR LOS DATOS EN LA BASE DE DATOS 
+CREA LA BASE DE DATOS CON EL SIGUIENTE COMANDO
+**********************************
+CREATE DATABASE tecnologik_system DEFAULT CHARACTER set utf8 collate utf8_spanish2_ci;
+**********************
+tene mysql y  apache activados en el servidor
+
+modificar el archivo mail para poner el gmail del que envia

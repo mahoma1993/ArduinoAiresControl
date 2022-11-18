@@ -1,0 +1,4 @@
+cambios a hacer por cliente
+cambiar char server2[] = "192.168.1.148"; por la ip del host del server
+cambiar en la funcion mail cliente.println("Host: 192.168.1.160"); por la ip del host del server
+cambiar en la funcion mail cliente.println("Host: 192.168.1.160"); por la ip del host del server

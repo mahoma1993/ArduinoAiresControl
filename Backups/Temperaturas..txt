@@ -1,0 +1,14 @@
+Qué rango de temperatura recomiendan los principales fabricantes de servidores?
+
+    IBM: 22 °C
+    Dell: 23 °C
+    HP: 22 °C
+
+
+
+¿A qué temperatura operan los Data Centers de las grandes empresas?
+
+    Google: 26 °C (*)
+    Sun: 27 °C   (*)
+    Cisco: 25 °C   (*)
+    Facebook: 22°C   (*)

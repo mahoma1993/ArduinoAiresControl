@@ -1,0 +1,309 @@
+#include <SPI.h>
+#include <Ethernet.h>
+#include <Base64.h>
+
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };//Ponemos la dirección MAC de la Ethernet Shield
+IPAddress ip(192,168,0,177); //Asignamos  la IP al Arduino
+EthernetServer server(80); //Creamos un servidor Web con el puerto 80 que es el puerto HTTP por defecto
+ char linebuf[80];
+int charcount=0;
+String readString;
+String password="adios";
+boolean authentificated=false;
+char password2[100]="";
+void setup()
+{
+  Serial.begin(9600);
+ 
+  // Inicializamos la comunicación Ethernet y el servidor
+  Ethernet.begin(mac, ip);
+  server.begin();
+  
+  Serial.print("server is at ");
+  Serial.println(Ethernet.localIP());
+  
+
+}
+ 
+void loop()
+{
+   EthernetClient client = server.available();
+   memset(linebuf,0,sizeof(linebuf));
+    charcount=0;
+    authentificated=false;
+   
+  if (client) {
+    // an http request ends with a blank line
+    boolean currentLineIsBlank = true;
+    while (client.connected()) {
+      if (client.available()) {
+        char c = client.read();
+        linebuf[charcount]=c;
+        if (charcount<sizeof(linebuf)-1) charcount++;
+         if (readString.length() < 100)
+          {
+            readString = readString + c;// Store characters to string
+            
+
+            
+          }
+        if (c == '\n' && currentLineIsBlank) {
+          if (authentificated){
+                
+                // send a standard http response header
+                client.println(F("HTTP/1.1 200 OK"));
+                client.println(F("Content-Type: text/html"));
+                //client.println("Connection: close");
+                client.println();
+                client.println(F("<!DOCTYPE HTML>"));
+                client.println(F("<BODY>"));
+                client.println("<html>");
+                // add a meta refresh tag, so the browser pulls again every 10 seconds:
+                //client.println("<meta http-equiv=\"refresh\" content=\"15\">");
+                client.println("<meta http-equiv='REFRESH' content='10; url=http://192.168.0.177'> ") ;
+                // output the value of each analog input pin
+                client.println("<HEAD>");
+      
+                client.println("<TITLE>SALA DE SERVIDORES</TITLE>");
+                client.println("</HEAD>");
+                
+               
+                client.println("<img src=\"https://a.storyblok.com/f/45096/912x238/b7fe1a8844/tecnologik.jpg\" width=600 height=200>");
+                //client.println("<img src=\"https://a.storyblok.com/f/45096/912x238/b7fe1a8844/tecnologik.jpg\" width=600 height=200>");
+                delay (100);
+                client.println("<br />");  
+                
+             
+                client.println("<h2 style=\"color:Navy\">MONITOREO DE TEMPERATURA EN LA SALA DE SERVIDORES</h2>");
+                client.println("<br />");  
+                client.print("<font size=\"+2\">TEMPERATURA:&nbsp");
+                client.print("<font color=\"blue\"> " );
+               // client.print(temperatura);
+                client.print("C");
+                client.print("</font>");
+                client.print("&nbsp&nbsp");
+                client.print("HUMEDAD:");
+                client.print("<font color=\"blue\"> " );
+                //client.print(humedad);
+                client.print("%");
+                client.print("</font>");
+                client.print("</font>");
+                
+           
+                
+          
+                  client.println("<br />");
+               
+                
+                client.println("<h2   style=\"color:Navy\">SISTEMA DE CONTROL </h2>"); 
+                //client.print(F("&nbsp"));
+      
+                client.print(F("<input type=button value='ENCENDER/APAGAR AIRE 1'style=\"width: 15%; height: 100px; background-color:green; border-color:green; color:white\" onmousedown=location.href='/?Ch_on'>"));
+
+
+                client.print(F("&nbsp&nbsp&nbsp"));
+      
+                client.print(F("<input type=button value='MODO AUTO/MODO MANUAL ' style=\"width: 15%; height: 100px; background-color:green; border-color:green; color:white\" onmousedown=location.href='/?ML_on'>"));
+
+                client.print(F("&nbsp&nbsp&nbsp"));
+                
+                
+                client.print(F("<input type=button value='ENCENDER/APAGAR AIRE 2 ' style=\"width: 15%; height: 100px; background-color:green; border-color:green; color:white\" onmousedown=location.href='/?Ch2_on'>"));
+
+                 client.print(F("&nbsp&nbsp&nbsp"));
+                client.println("<br />");
+                client.println("<br />");
+                client.println("<FORM ACTION='/' method=get >"); 
+                client.println( "<label for=\"fname\">DESEA CAMBIAR LA PASSWORD DE INGRESO?:</label><br>");
+                client.println(" <input type=\"text\" id=\"fname\" name=\"fname\" value=\"\"><br>");
+                
+          
+               client.println("<br />");
+               
+             
+         
+                
+                client.println("<br />");
+                client.println("<br />");
+                client.println("<small>");
+                client.print("<font size=\"-2\">MONITOREO DE SALA DE SERVIDORES VERSION 1.0 </font>");
+                client.println("</small>");
+                client.println(F("</body></html>"));
+                break;
+            
+          }
+        else {
+          client.println("HTTP/1.1 401 Authorization Required");
+          client.println("WWW-Authenticate: Basic realm=\"Secure Area\"");
+          client.println("Content-Type: text/html");
+          client.println("Connnection: close");
+          client.println();
+          client.println("<!DOCTYPE HTML>");
+          client.println("<HTML>  <HEAD>   <TITLE>Error</TITLE>");
+          client.println(" </HEAD> <BODY><H1>401 Unauthorized.</H1></BODY> </HTML>");
+          break;
+            }
+        }
+              if (c == '\n') {
+                // you're starting a new line
+                currentLineIsBlank = true;
+                 if (strstr(linebuf,"Authorization: Basic")>0 && ((strstr(linebuf,"dGVjbm8xMDA=")>0)||(strstr(linebuf,password2)>0) ))
+                 authentificated=true;
+                 memset(linebuf,0,sizeof(linebuf));
+                 charcount=0;
+              } 
+              else if (c != '\r') {
+                // you've gotten a character on the current line
+                currentLineIsBlank = false;
+              }
+              
+            }
+          }
+          // give the web browser time to receive the data
+          delay(10);
+          if(readString.indexOf("/?fname") > 0)
+               {
+
+                int pos=readString.indexOf("/?fname");
+                int pos2=readString.indexOf("HTTP");
+                //Serial.println(pos);
+                //Serial.println(pos2);
+                pos=pos+8;
+                password=readString.substring(pos,pos2-1);
+                 //Serial.println(password);
+                 base64();
+                 Serial.println(password2);
+                 //Serial.println("");
+               // client.println("<meta http-equiv='REFRESH' content='0; url=http://192.168.0.177'> ") ;
+               //int l=password.length();
+               //Serial.println(l);
+          
+                
+               }
+
+
+
+
+
+
+
+
+          
+//          // close the connection:
+//             if(readString.indexOf("/?ML_on") > 0)
+//               {
+//                client.println("<meta http-equiv='REFRESH' content='0; url=http://192.168.0.177'> ") ;
+//                if ( estado_boton3==1){
+//                  estado_boton3=0;
+//                }else {
+//                  estado_boton3=1;// Switch on Main Light
+//                }
+//                
+//                pantalla_cambio=1;
+//                
+//               }
+//      //
+//      //          if(readString.indexOf("/?ML_off") > 0){
+//      //            estado_boton3=0;// Switch off Main Light
+//      //            pantalla_cambio=1;
+//      //            client.println("<meta http-equiv='REFRESH' content='0; url=http://192.168.0.177'> ") ;
+//      //          }
+//                
+//                if(readString.indexOf("/?Ch_on") > 0) {
+//                  client.println("<meta http-equiv='REFRESH' content='0; url=http://192.168.0.177'> ") ;
+//                  if (estado_boton1==1){
+//                    estado_boton1=0;
+//                  }else
+//                    estado_boton1=1;// 
+//                  pantalla_cambio=1;
+//                }
+//      //          
+//      //          if(readString.indexOf("/?Ch_off") > 0){
+//      //            client.println("<meta http-equiv='REFRESH' content='0; url=http://192.168.0.177'> ") ;
+//      //            estado_boton1=0;// 
+//      //            pantalla_cambio=1;
+//      //          }
+//                
+//                if(readString.indexOf("/?Ch2_on") > 0){
+//                  client.println("<meta http-equiv='REFRESH' content='0; url=http://192.168.0.177'> ") ;
+//                  if (estado_boton2==1){
+//                    estado_boton2=0;
+//                  }else
+//                    estado_boton2=1;//
+//                  pantalla_cambio=1; 
+//                }
+//                
+//                if(readString.indexOf("/?Ch2_off") > 0){
+//                  client.println("<meta http-equiv='REFRESH' content='0; url=http://192.168.0.177'> ") ;
+//                  estado_boton2=0;//
+//                  pantalla_cambio=1; 
+//                }
+                
+                readString = "";// Clearing string for next read
+          client.stop();
+            //
+          
+        }
+
+  
+}
+
+
+
+void base64(){
+    Serial.println("Base64 example");
+  char charBuf[password.length()+1];
+  password.toCharArray(charBuf, password.length()+1);
+  //Serial.println(password);
+   //Serial.println(charBuf);
+
+  int inputLen = sizeof(charBuf);
+  //Serial.println(inputLen);
+  int encodedLen = base64_enc_len(inputLen);
+  char encoded[encodedLen];
+  
+  //erial.print(charBuf); Serial.print(" = ");
+//  
+//
+  base64_encode(encoded, charBuf, inputLen);
+  //password2=encoded;
+    memset(password2, 0, sizeof(password2));
+    memcpy(password2, encoded, sizeof(encoded[0])*inputLen+3);
+  //Serial.println("password2");
+  //Serial.println(password2);
+
+  //Serial.println("encoded");
+  //Serial.println(encoded);
+  //password= String(encoded);
+  
+  //Serial.println("password");
+  //Serial.println(password);
+//
+//
+  //Serial.println(encoded);
+ // 
+//  
+
+
+
+
+
+
+
+
+
+//  
+//  // decoding
+//  char input2[] = "Zm9vYmFy";
+  int input2Len = sizeof(password2);
+  Serial.println("taminput2");
+  Serial.println(input2Len);
+//  
+  int decodedLen = base64_dec_len(password2, input2Len);
+  char decoded[decodedLen];
+//  
+  base64_decode(decoded, password2, input2Len);
+  
+  Serial.print(password2); Serial.print(" = "); Serial.println(decoded);
+}
+  
